@@ -49,6 +49,7 @@ canvas{width:100%;height:100%;display:block}
 .modal{background:linear-gradient(160deg,#fff8e8 0%,#f7dda2 42%,#dcaa56 100%);color:#43240c;border:6px solid #fff9ef;border-radius:30px;max-width:520px;width:100%;padding:36px 26px;box-shadow:0 24px 90px rgba(0,0,0,.5);text-align:center;animation:pop .42s both}
 .modal h2{font-size:40px;margin:10px 0 8px;letter-spacing:1px}
 .modal .award{font-size:clamp(36px,8vw,58px);font-weight:1000;line-height:1.15;color:#9d153c;text-shadow:0 2px 0 rgba(255,255,255,.48),0 0 16px rgba(255,255,255,.16);margin:14px 0 8px;padding:10px 8px;border-radius:20px;background:linear-gradient(180deg,rgba(255,255,255,.62),rgba(255,255,255,.24))}
+.modal .bag-gift{display:block;margin-top:9px;padding-top:9px;border-top:1px solid rgba(141,57,45,.24);color:#7b1736;font-size:clamp(20px,4.5vw,29px);font-weight:900;line-height:1.35;text-shadow:none}
 .modal .extra{font-size:20px;font-weight:900;color:#7b1736;line-height:1.6;margin:10px 0}
 .modal button{margin-top:22px;border:0;background:linear-gradient(145deg,#951b3f,#5f0d27);color:white;border-radius:40px;padding:15px 40px;font-size:18px;font-weight:bold;cursor:pointer;box-shadow:0 8px 20px rgba(0,0,0,.3)}
 .modal .tier{color:#8f1b3f;font-size:20px;font-weight:1000;margin:10px 0 4px}
@@ -209,7 +210,7 @@ body:after{content:"";position:fixed;inset:0;pointer-events:none;opacity:.3;back
     <div class="tier" id="tier"></div>
     <div class="award" id="award"></div>
     <p id="extra" class="extra"></p>
-    <p class="hint">感謝參與BAW活動，煩請將畫面出示給現場工作人員</p>
+    <p class="hint">感謝參與BAW活動，煩請將呼叫現場工作人員領獎與登記</p>
     <button id="close">下一位</button>
   </div>
 </div>
@@ -356,7 +357,9 @@ function celebrate(count=90){
 function showPrize(idx){
   const p=prizes[idx], tier=idx===10?'🏆 一等獎':idx===9?'🥈 二等獎':idx===8?'🥉 三等獎':'';
   document.getElementById('tier').textContent=tier;
-  document.getElementById('award').textContent=p.name;
+  const awardEl=document.getElementById('award');
+  awardEl.textContent=p.name;
+  const bagGift=document.createElement('span'); bagGift.className='bag-gift'; bagGift.textContent='＋BAW購物袋乙個'; awardEl.appendChild(bagGift);
   document.getElementById('extra').textContent=idx===10?'恭喜獲得一等獎：一雙鞋！':idx===9?'恭喜獲得二等獎：0928／0927拖鞋！':idx===8?'恭喜獲得三等獎：BAW科技除臭襪！':'';
   document.getElementById('result').innerHTML=`🎊 恭喜抽中：<strong>${p.name}</strong>${p.sub?'｜'+p.sub:''}`;
   document.getElementById('overlay').classList.add('show');
