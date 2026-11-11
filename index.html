@@ -156,6 +156,14 @@ body:after{content:"";position:fixed;inset:0;pointer-events:none;opacity:.3;back
 .reveal{background:radial-gradient(circle at 50% 30%,#ffe5a3,#e84b41 20%,#ad1040 52%,#420817 85%,#1b0312 100%)}
 @media(max-width:700px){.wrap{padding:12px 10px 50px}.hero{padding:15px 10px 20px;border-radius:21px}.header-line{font-size:9px;letter-spacing:1.3px;gap:8px}.header-line .star-cluster{font-size:16px}.eyebrow{font-size:clamp(16px,4.8vw,23px)}.title .brand{font-size:clamp(19px,5.5vw,28px)}.title .expo-name{font-size:clamp(21px,6vw,31px)}.title .hero-main{font-size:clamp(43px,11vw,67px);letter-spacing:1px}.festival-deco{font-size:30px}.stage-shell{padding:22px 0 12px;margin-top:14px}.stage-orbit{display:none}.stage-festive{font-size:19px;letter-spacing:12px}.prize-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.prize{min-height:82px;font-size:13px;padding:10px 8px;gap:5px}.prize b{min-width:34px;padding:8px 6px;font-size:13px}.tag{font-size:10px}.result{padding:15px 10px;font-size:17px}.prize-header{gap:10px}.prize-title-ornament{font-size:23px}}
 @media(prefers-reduced-motion:reduce){body:before,.hero:after,.festival-deco{animation:none}}
+
+/* Background music controls: user gesture unlocks sound on desktop and mobile. */
+.music-row{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:9px;margin:12px auto 0;max-width:780px}
+.music-toggle{background:linear-gradient(110deg,#ffefba,#f9cb67);color:#6b1730;border:2px solid #fff0cc;border-radius:100px;padding:10px 22px;font:900 15px 'Microsoft JhengHei','Noto Sans TC',sans-serif;box-shadow:0 4px 0 #963423,0 10px 22px #2b001788;cursor:pointer;transition:transform .16s,filter .16s}
+.music-toggle:active{transform:translateY(2px)}
+.music-toggle:hover{filter:brightness(1.08)}
+.music-tip{font-size:12px;color:#ffefce;font-weight:650;text-shadow:0 2px 8px #3d0518}
+@media(max-width:700px){.music-row{gap:8px;margin-top:11px}.music-toggle{font-size:13px;padding:9px 16px}.music-tip{font-size:11px}}
 </style>
 </head>
 <body>
@@ -165,10 +173,15 @@ body:after{content:"";position:fixed;inset:0;pointer-events:none;opacity:.3;back
     <div class="festival-deco left" aria-hidden="true">✦</div><div class="festival-deco right" aria-hidden="true">✦</div>
     <div class="header-line"><span class="star-cluster" aria-hidden="true">✦ ✧</span><span class="expo-kicker">TAIPEI INTERNATIONAL SHOE SHOW 2026</span><span class="star-cluster" aria-hidden="true">✧ ✦</span></div>
     <div class="eyebrow">BAW <span class="cross">×</span> 2026 台北國際鞋展</div>
-    <h1 class="title"><span class="brand">BAW 專利空調氣墊鞋</span><span class="expo-name">2026 台北國際鞋展</span><span class="hero-main">闖關抽大獎</span></h1>
+    <h1 class="title"><span class="hero-main">闖關抽大獎</span></h1>
     <div class="subtitle"><span class="mini-star">✦</span> 完成展位闖關體驗後，即可參加幸運大轉盤抽獎 <span class="mini-star">✦</span></div>
     <div class="date-ribbon"><span class="date-icon">✧</span><span class="date">12 / 11 — 12 / 14</span><span class="date-icon">✧</span></div>
   </section>
+
+  <div class="music-row">
+    <button type="button" class="music-toggle" id="musicToggle" aria-pressed="false">♫ 開啟背景音樂</button>
+    <span class="music-tip" id="musicTip">點擊抽獎也會播放輕快配樂，可隨時關閉</span>
+  </div>
 
   <div class="stage-shell">
     <div class="stage-festive top" aria-hidden="true">✦ <span>✧</span> ✦</div>
@@ -212,6 +225,7 @@ body:after{content:"";position:fixed;inset:0;pointer-events:none;opacity:.3;back
   </div>
 </div>
 
+<audio id="bgMusic" src="./background_music.mp3" loop preload="auto" aria-label="BAW 原創輕快背景音樂"></audio>
 <script>
 const prizes=[
  {code:'01',name:'現抵300元',sub:'',w:10},
@@ -238,6 +252,52 @@ function ensureAudio(){
     if(AC) audioCtx = new AC();
   }
   if(audioCtx && audioCtx.state==='suspended') audioCtx.resume();
+}
+const bgMusic=document.getElementById('bgMusic');
+const musicToggle=document.getElementById('musicToggle');
+const musicTip=document.getElementById('musicTip');
+let musicEnabled=true; // first SPIN or explicit music-toggle click unlocks autoplay restrictions
+const NORMAL_MUSIC_VOLUME=0.27;
+const SPIN_MUSIC_VOLUME=0.13;
+bgMusic.volume=NORMAL_MUSIC_VOLUME;
+function updateMusicButton(){
+  if(!musicEnabled){
+    musicToggle.textContent='♫ 背景音樂：已關閉';
+    musicToggle.setAttribute('aria-pressed','false');
+    musicTip.textContent='點擊按鈕可重新開啟背景音樂';
+  } else if(bgMusic.paused){
+    musicToggle.textContent='♫ 開啟背景音樂';
+    musicToggle.setAttribute('aria-pressed','false');
+    musicTip.textContent='點擊抽獎也會播放輕快配樂，可隨時關閉';
+  } else {
+    musicToggle.textContent='♫ 背景音樂：播放中';
+    musicToggle.setAttribute('aria-pressed','true');
+    musicTip.textContent='純演奏配樂・無歌詞';
+  }
+}
+function playMusic(){
+  if(!musicEnabled)return;
+  bgMusic.volume=busy?SPIN_MUSIC_VOLUME:NORMAL_MUSIC_VOLUME;
+  if(!bgMusic.paused)return;
+  const p=bgMusic.play();
+  if(p&&typeof p.then==='function')p.then(updateMusicButton).catch(()=>{
+    musicToggle.textContent='♫ 點此啟動音樂';
+    musicTip.textContent='瀏覽器需點擊按鈕才可播放聲音';
+  });
+  else updateMusicButton();
+}
+musicToggle.addEventListener('click',()=>{
+  if(musicEnabled && !bgMusic.paused){
+    musicEnabled=false; bgMusic.pause();
+  }else{
+    musicEnabled=true;playMusic();
+  }
+  updateMusicButton();
+});
+function playWheelTick(){
+  if(!audioCtx)return;
+  const t=audioCtx.currentTime+.002;
+  tone(960,t,.060,'triangle',.022,480);
 }
 function tone(freq,start,dur,type='sine',gain=.07,endFreq=null){
   if(!audioCtx) return;const osc=audioCtx.createOscillator();const g=audioCtx.createGain();
@@ -312,10 +372,35 @@ function beginReveal(idx){
     el.classList.add('ready');
   }, 2200);
 }
+const SPIN_DURATION_MS=4000;
 function spin(){
-  if(busy) return; ensureAudio(); busy=true; document.getElementById('spin').disabled=true; document.getElementById('result').textContent='幸運轉盤旋轉中…';
-  const idx=pick(), current=((angle%(Math.PI*2))+(Math.PI*2))%(Math.PI*2), desired=(((-idx*step)%(Math.PI*2))+(Math.PI*2))%(Math.PI*2), delta=((desired-current+Math.PI*2)%(Math.PI*2))+Math.PI*2*6, start=performance.now(), from=angle;
-  function tick(now){ let t=Math.min(1,(now-start)/3000); angle=from+delta*ease(t); draw(); if(t<1){ requestAnimationFrame(tick); } else { angle=desired; draw(); beginReveal(idx); } }
+  if(busy)return;
+  ensureAudio();
+  busy=true;
+  playMusic();
+  bgMusic.volume=SPIN_MUSIC_VOLUME;
+  document.getElementById('spin').disabled=true;
+  document.getElementById('result').textContent='幸運轉盤旋轉中…';
+  const idx=pick();
+  const current=((angle%(Math.PI*2))+(Math.PI*2))%(Math.PI*2);
+  const desired=(((-idx*step)%(Math.PI*2))+(Math.PI*2))%(Math.PI*2);
+  const delta=((desired-current+Math.PI*2)%(Math.PI*2))+Math.PI*2*6;
+  const start=performance.now(),from=angle;
+  let lastSector=Math.floor((angle+step/2)/step);
+  let lastTickTime=-Infinity;
+  function tick(now){
+    const t=Math.min(1,(now-start)/SPIN_DURATION_MS);
+    angle=from+delta*ease(t);
+    const sector=Math.floor((angle+step/2)/step);
+    if(sector!==lastSector){
+      // Tick as each numbered wedge passes beneath the top pointer.
+      if(now-lastTickTime>34){playWheelTick();lastTickTime=now;}
+      lastSector=sector;
+    }
+    draw();
+    if(t<1){requestAnimationFrame(tick);}
+    else{angle=desired;draw();bgMusic.volume=NORMAL_MUSIC_VOLUME;beginReveal(idx);}
+  }
   requestAnimationFrame(tick);
 }
 function resetView(){
@@ -323,7 +408,7 @@ function resetView(){
   const reveal = document.getElementById('reveal'); reveal.classList.remove('show','ready'); pendingJackpot=null;
   document.querySelectorAll('.confetti').forEach(el=>el.remove());
   document.getElementById('tier').textContent=''; document.getElementById('award').textContent=''; document.getElementById('extra').textContent='';
-  document.getElementById('result').textContent=defaultResult; angle=0; draw(); busy=false; document.getElementById('spin').disabled=false;
+  document.getElementById('result').textContent=defaultResult; angle=0; draw(); busy=false; bgMusic.volume=NORMAL_MUSIC_VOLUME; document.getElementById('spin').disabled=false;
 }
 
 document.getElementById('spin').addEventListener('click',spin);
