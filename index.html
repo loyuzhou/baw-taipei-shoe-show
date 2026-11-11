@@ -158,12 +158,12 @@ body:after{content:"";position:fixed;inset:0;pointer-events:none;opacity:.3;back
 @media(prefers-reduced-motion:reduce){body:before,.hero:after,.festival-deco{animation:none}}
 
 /* Background music controls: user gesture unlocks sound on desktop and mobile. */
-.music-row{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:9px;margin:12px auto 0;max-width:780px}
+.music-row{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:12px;margin:24px auto 0;max-width:850px;padding:17px 20px;border:1px solid #ffdc8a66;border-radius:18px;background:linear-gradient(120deg,#8b163bb8,#b62f2799,#8b163bb8);box-shadow:0 12px 28px #21000555}
 .music-toggle{background:linear-gradient(110deg,#ffefba,#f9cb67);color:#6b1730;border:2px solid #fff0cc;border-radius:100px;padding:10px 22px;font:900 15px 'Microsoft JhengHei','Noto Sans TC',sans-serif;box-shadow:0 4px 0 #963423,0 10px 22px #2b001788;cursor:pointer;transition:transform .16s,filter .16s}
 .music-toggle:active{transform:translateY(2px)}
 .music-toggle:hover{filter:brightness(1.08)}
-.music-tip{font-size:12px;color:#ffefce;font-weight:650;text-shadow:0 2px 8px #3d0518}
-@media(max-width:700px){.music-row{gap:8px;margin-top:11px}.music-toggle{font-size:13px;padding:9px 16px}.music-tip{font-size:11px}}
+.music-label{font-size:15px;color:#fff2c8;font-weight:900;white-space:nowrap}.music-tip{font-size:12px;color:#ffefce;font-weight:650;text-shadow:0 2px 8px #3d0518}
+@media(max-width:700px){.music-row{gap:9px;margin-top:18px;padding:13px 10px}.music-label{font-size:13px}.music-toggle{font-size:13px;padding:9px 16px}.music-tip{font-size:11px;width:100%}}
 </style>
 </head>
 <body>
@@ -178,10 +178,6 @@ body:after{content:"";position:fixed;inset:0;pointer-events:none;opacity:.3;back
     <div class="date-ribbon"><span class="date-icon">✧</span><span class="date">12 / 11 — 12 / 14</span><span class="date-icon">✧</span></div>
   </section>
 
-  <div class="music-row">
-    <button type="button" class="music-toggle" id="musicToggle" aria-pressed="false">♫ 開啟背景音樂</button>
-    <span class="music-tip" id="musicTip">點擊抽獎也會播放輕快配樂，可隨時關閉</span>
-  </div>
 
   <div class="stage-shell">
     <div class="stage-festive top" aria-hidden="true">✦ <span>✧</span> ✦</div>
@@ -201,6 +197,11 @@ body:after{content:"";position:fixed;inset:0;pointer-events:none;opacity:.3;back
   </section>
 
   <p class="foot">BAW 專利空調氣墊鞋｜2026台北國際鞋展 展位活動專用<br>活動辦法、折抵使用方式、獎項與實際庫存以現場公告為準</p>
+  <div class="music-row" role="group" aria-label="展場背景音樂控制">
+    <span class="music-label">♫ 展場背景音樂</span>
+    <button type="button" class="music-toggle" id="musicToggle" aria-pressed="false">♫ 開啟背景音樂</button>
+    <span class="music-tip" id="musicTip">輕快無歌詞配樂 · 點擊「立即抽獎」也可啟動</span>
+  </div>
 </main>
 
 <div id="reveal" class="reveal" aria-live="polite">
@@ -225,7 +226,7 @@ body:after{content:"";position:fixed;inset:0;pointer-events:none;opacity:.3;back
   </div>
 </div>
 
-<audio id="bgMusic" src="./background_music.mp3" loop preload="auto" aria-label="BAW 原創輕快背景音樂"></audio>
+<audio id="bgMusic" src="./background_music.mp3" loop preload="auto" aria-label="BAW 原創展場節奏背景音樂"></audio>
 <script>
 const prizes=[
  {code:'01',name:'現抵300元',sub:'',w:10},
@@ -243,13 +244,22 @@ const prizes=[
 const defaultResult='按下轉盤中央按鈕，立即參加「闖關抽大獎」！';
 const totalWeight=prizes.reduce((s,p)=>s+p.w,0);
 const canvas=document.getElementById('wheel'),ctx=canvas.getContext('2d'),N=prizes.length,step=Math.PI*2/N,center=500,R=460;
-let angle=0,busy=false,pendingJackpot=null,audioCtx=null;
+let angle=0,busy=false,pendingJackpot=null,audioCtx=null,sfxBus=null;
 const lines=prizes.map(p=>p.code);
 
 function ensureAudio(){
   if(!audioCtx){
     const AC = window.AudioContext || window.webkitAudioContext;
-    if(AC) audioCtx = new AC();
+    if(AC){
+      audioCtx = new AC();
+      sfxBus = audioCtx.createDynamicsCompressor();
+      sfxBus.threshold.value=-11;
+      sfxBus.knee.value=12;
+      sfxBus.ratio.value=5;
+      sfxBus.attack.value=.004;
+      sfxBus.release.value=.18;
+      sfxBus.connect(audioCtx.destination);
+    }
   }
   if(audioCtx && audioCtx.state==='suspended') audioCtx.resume();
 }
@@ -257,8 +267,9 @@ const bgMusic=document.getElementById('bgMusic');
 const musicToggle=document.getElementById('musicToggle');
 const musicTip=document.getElementById('musicTip');
 let musicEnabled=true; // first SPIN or explicit music-toggle click unlocks autoplay restrictions
-const NORMAL_MUSIC_VOLUME=0.27;
-const SPIN_MUSIC_VOLUME=0.13;
+const NORMAL_MUSIC_VOLUME=0.34;
+const SPIN_MUSIC_VOLUME=0.12;
+const CELEBRATION_MUSIC_VOLUME=0.10;
 bgMusic.volume=NORMAL_MUSIC_VOLUME;
 function updateMusicButton(){
   if(!musicEnabled){
@@ -268,11 +279,11 @@ function updateMusicButton(){
   } else if(bgMusic.paused){
     musicToggle.textContent='♫ 開啟背景音樂';
     musicToggle.setAttribute('aria-pressed','false');
-    musicTip.textContent='點擊抽獎也會播放輕快配樂，可隨時關閉';
+    musicTip.textContent='點擊「立即抽獎」也會播放配樂，可隨時關閉';
   } else {
     musicToggle.textContent='♫ 背景音樂：播放中';
     musicToggle.setAttribute('aria-pressed','true');
-    musicTip.textContent='純演奏配樂・無歌詞';
+    musicTip.textContent='原創展場節奏・無歌詞';
   }
 }
 function playMusic(){
@@ -297,31 +308,31 @@ musicToggle.addEventListener('click',()=>{
 function playWheelTick(){
   if(!audioCtx)return;
   const t=audioCtx.currentTime+.002;
-  tone(960,t,.060,'triangle',.022,480);
+  tone(1120,t,.072,'triangle',.105,520);
 }
 function tone(freq,start,dur,type='sine',gain=.07,endFreq=null){
   if(!audioCtx) return;const osc=audioCtx.createOscillator();const g=audioCtx.createGain();
   osc.type=type;osc.frequency.setValueAtTime(freq,start);if(endFreq) osc.frequency.exponentialRampToValueAtTime(endFreq,start+dur);
   g.gain.setValueAtTime(0.0001,start);g.gain.exponentialRampToValueAtTime(gain,start+.02);g.gain.exponentialRampToValueAtTime(0.0001,start+dur);
-  osc.connect(g).connect(audioCtx.destination);osc.start(start);osc.stop(start+dur+.02);
+  osc.connect(g).connect(sfxBus||audioCtx.destination);osc.start(start);osc.stop(start+dur+.02);
 }
 function noiseBurst(start,dur=.22,gain=.08){
   if(!audioCtx) return;const buffer=audioCtx.createBuffer(1, audioCtx.sampleRate*dur, audioCtx.sampleRate);const data=buffer.getChannelData(0);
   for(let i=0;i<data.length;i++) data[i]=(Math.random()*2-1)*(1-i/data.length);
-  const src=audioCtx.createBufferSource();src.buffer=buffer;const filter=audioCtx.createBiquadFilter();filter.type='bandpass';filter.frequency.value=1000;const g=audioCtx.createGain();g.gain.setValueAtTime(gain,start);g.gain.exponentialRampToValueAtTime(0.0001,start+dur);src.connect(filter).connect(g).connect(audioCtx.destination);src.start(start);src.stop(start+dur);
+  const src=audioCtx.createBufferSource();src.buffer=buffer;const filter=audioCtx.createBiquadFilter();filter.type='bandpass';filter.frequency.value=1000;const g=audioCtx.createGain();g.gain.setValueAtTime(gain,start);g.gain.exponentialRampToValueAtTime(0.0001,start+dur);src.connect(filter).connect(g).connect(sfxBus||audioCtx.destination);src.start(start);src.stop(start+dur);
 }
 function playNormalSound(){
   ensureAudio(); if(!audioCtx) return; const t=audioCtx.currentTime+.01;
-  tone(784,t,.12,'triangle',.06); tone(988,t+.12,.14,'triangle',.07); tone(1175,t+.28,.18,'sine',.08);
+  tone(784,t,.14,'triangle',.12); tone(988,t+.13,.17,'triangle',.13); tone(1175,t+.30,.26,'sine',.14);
 }
 function playJackpotSound(){
   ensureAudio(); if(!audioCtx) return; const t=audioCtx.currentTime+.01;
-  noiseBurst(t,.28,.09); tone(180,t,.35,'sawtooth',.055,90); tone(220,t+.05,.45,'square',.05,110);
-  tone(523,t+.3,.28,'triangle',.055); tone(784,t+.45,.3,'triangle',.065); tone(1046,t+.62,.45,'sine',.08);
+  noiseBurst(t,.36,.17); tone(180,t,.42,'sawtooth',.105,90); tone(220,t+.05,.45,'square',.085,110);
+  tone(523,t+.32,.28,'triangle',.115); tone(784,t+.47,.3,'triangle',.135); tone(1046,t+.63,.50,'sine',.145);
 }
 function playJackpotRevealSound(){
   ensureAudio(); if(!audioCtx) return; const t=audioCtx.currentTime+.01;
-  tone(659,t,.16,'triangle',.06); tone(880,t+.18,.18,'triangle',.07); tone(1318,t+.4,.42,'sine',.09); noiseBurst(t+.32,.18,.05);
+  tone(659,t,.18,'triangle',.12); tone(880,t+.2,.2,'triangle',.13); tone(1318,t+.42,.52,'sine',.15); noiseBurst(t+.34,.24,.11);
 }
 
 function draw(){
@@ -355,6 +366,7 @@ function showPrize(idx){
   document.getElementById('result').innerHTML=`🎊 恭喜抽中：<strong>${p.name}</strong>${p.sub?'｜'+p.sub:''}`;
   document.getElementById('overlay').classList.add('show');
   if(idx>=8){ celebrate(160); playJackpotRevealSound(); } else { playNormalSound(); }
+  bgMusic.volume=NORMAL_MUSIC_VOLUME;
   busy=false; document.getElementById('spin').disabled=false;
 }
 function beginReveal(idx){
@@ -366,6 +378,7 @@ function beginReveal(idx){
   document.getElementById('revealSub').textContent='慶祝動畫播放中，請稍候…';
   el.classList.remove('ready');
   el.classList.add('show');
+  bgMusic.volume=CELEBRATION_MUSIC_VOLUME;
   celebrate(210); playJackpotSound();
   setTimeout(()=>{
     document.getElementById('revealSub').textContent='請點一下畫面，揭曉中獎結果';
@@ -399,7 +412,7 @@ function spin(){
     }
     draw();
     if(t<1){requestAnimationFrame(tick);}
-    else{angle=desired;draw();bgMusic.volume=NORMAL_MUSIC_VOLUME;beginReveal(idx);}
+    else{angle=desired;draw();bgMusic.volume=idx>=8?CELEBRATION_MUSIC_VOLUME:NORMAL_MUSIC_VOLUME;beginReveal(idx);}
   }
   requestAnimationFrame(tick);
 }
