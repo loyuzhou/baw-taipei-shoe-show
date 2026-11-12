@@ -158,6 +158,30 @@ body:after{content:"";position:fixed;inset:0;pointer-events:none;opacity:.3;back
 @media(max-width:700px){.wrap{padding:12px 10px 50px}.hero{padding:15px 10px 20px;border-radius:21px}.header-line{font-size:9px;letter-spacing:1.3px;gap:8px}.header-line .star-cluster{font-size:16px}.eyebrow{font-size:clamp(16px,4.8vw,23px)}.title .brand{font-size:clamp(19px,5.5vw,28px)}.title .expo-name{font-size:clamp(21px,6vw,31px)}.title .hero-main{font-size:clamp(43px,11vw,67px);letter-spacing:1px}.festival-deco{font-size:30px}.stage-shell{padding:22px 0 12px;margin-top:14px}.stage-orbit{display:none}.stage-festive{font-size:19px;letter-spacing:12px}.prize-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.prize{min-height:82px;font-size:13px;padding:10px 8px;gap:5px}.prize b{min-width:34px;padding:8px 6px;font-size:13px}.tag{font-size:10px}.result{padding:15px 10px;font-size:17px}.prize-header{gap:10px}.prize-title-ornament{font-size:23px}}
 @media(prefers-reduced-motion:reduce){body:before,.hero:after,.festival-deco{animation:none}}
 
+
+/* 中獎視窗：現抵活動規則清楚顯示，手機短螢幕亦可捲動 */
+.overlay{overflow-y:auto;align-items:flex-start;overscroll-behavior:contain}
+.modal{margin:auto;flex-shrink:0}
+.win-rules{margin-top:14px;border:1px solid rgba(148,67,40,.35);border-radius:16px;padding:13px 16px 12px;background:linear-gradient(180deg,rgba(255,255,255,.63),rgba(255,248,223,.32));text-align:left;box-shadow:inset 0 1px 0 #fff9ee}
+.win-rules-title{text-align:center;color:#871e38;font-size:17px;font-weight:900;letter-spacing:1px;margin-bottom:7px}
+.win-rules ol{margin:0;padding-left:1.5em;color:#57351e;font-weight:750;font-size:14px;line-height:1.62}
+.win-rules li+li{margin-top:6px}
+.win-rules strong{color:#92233d;font-weight:950;white-space:normal}
+@media(max-width:540px){
+  .overlay{padding:12px}
+  .modal{padding:16px 14px 22px;border-width:4px;border-radius:23px}
+  .modal h2{font-size:clamp(27px,7vw,34px);margin:4px 0}
+  .modal .award{font-size:clamp(25px,6.7vw,34px);padding:8px 6px;margin:10px 0 5px}
+  .modal .bag-gift{font-size:clamp(20px,5.4vw,26px)}
+  .modal .extra{font-size:16px;margin:6px 0}
+  .modal .tier{font-size:18px;margin:4px 0}
+  .modal .hint{font-size:14px;margin:9px 0}
+  .modal button{margin-top:14px;padding:12px 33px;font-size:20px}
+  .win-rules{padding:9px 12px;margin-top:9px}
+  .win-rules-title{font-size:15px;margin-bottom:4px}
+  .win-rules ol{font-size:12.5px;line-height:1.5}
+}
+
 </style>
 </head>
 <body>
@@ -211,20 +235,27 @@ body:after{content:"";position:fixed;inset:0;pointer-events:none;opacity:.3;back
     <div class="award" id="award"></div>
     <p id="extra" class="extra"></p>
     <p class="hint">感謝參與BAW活動，煩請將呼叫現場工作人員領獎與登記</p>
+    <section class="win-rules" aria-label="抽獎活動規則">
+      <div class="win-rules-title">✦ 活動規則 ✦</div>
+      <ol>
+        <li>購鞋現抵金額計算方式為<br><strong>（原價－折抵金額）×參展推廣八折</strong></li>
+        <li>本公司保有最終修改、變更、活動解釋及取消本活動之權利。</li>
+      </ol>
+    </section>
     <button id="close">下一位</button>
   </div>
 </div>
 
 <script>
 const prizes=[
- {code:'01',name:'現抵300元',sub:'',w:10},
- {code:'02',name:'現抵400元',sub:'',w:30},
- {code:'03',name:'現抵500元',sub:'',w:33.5},
- {code:'04',name:'現抵600元',sub:'',w:8},
- {code:'05',name:'現抵700元',sub:'',w:5},
- {code:'06',name:'現抵800元',sub:'',w:4},
- {code:'07',name:'現抵900元',sub:'',w:3},
- {code:'08',name:'現抵1000元',sub:'',w:2},
+ {code:'01',name:'購鞋現抵300元',sub:'',w:10},
+ {code:'02',name:'購鞋現抵400元',sub:'',w:30},
+ {code:'03',name:'購鞋現抵500元',sub:'',w:33.5},
+ {code:'04',name:'購鞋現抵600元',sub:'',w:8},
+ {code:'05',name:'購鞋現抵700元',sub:'',w:5},
+ {code:'06',name:'購鞋現抵800元',sub:'',w:4},
+ {code:'07',name:'購鞋現抵900元',sub:'',w:3},
+ {code:'08',name:'購鞋現抵1000元',sub:'',w:2},
  {code:'09',name:'BAW科技除臭襪',sub:'三等獎',w:3},
  {code:'10',name:'0928／0927拖鞋',sub:'二等獎',w:0.5},
  {code:'11',name:'一雙鞋',sub:'一等獎',w:0.1}
